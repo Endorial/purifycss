@@ -1,14 +1,23 @@
-# PurifyCSS  
+# PurifyCSS
 
-[![Travis](https://img.shields.io/travis/purifycss/purifycss/master.svg)]()
-[![npm](https://img.shields.io/npm/dm/purify-css.svg)]()
-[![David](https://img.shields.io/david/purifycss/purifycss.svg)]()
-![Join the chat at https://gitter.im/purifycss/purifycss](https://badges.gitter.im/purifycss/purifycss.svg)
+[![npm version](https://img.shields.io/npm/v/purifycss.svg)](https://www.npmjs.com/package/purifycss)
+[![npm downloads](https://img.shields.io/npm/dm/purifycss.svg)](https://www.npmjs.com/package/purifycss)
+[![Node.js CI](https://github.com/purifycss/purifycss/actions/workflows/ci.yml/badge.svg)](https://github.com/purifycss/purifycss/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 
-A function that takes content (HTML/JS/PHP/etc) and CSS, and returns only the **used CSS**.  
-PurifyCSS does not modify the original CSS files. You can write to a new file, like minification.  
+A function that takes content (HTML/JS/PHP/etc) and CSS, and returns only the **used CSS**.
+PurifyCSS does not modify the original CSS files. You can write to a new file, like minification.
 If your application is using a CSS framework, this is especially useful as many selectors are often unused.
+
+## Features
+
+- **Smart Detection**: Detects CSS selectors in HTML, JavaScript, and other content files
+- **Framework Friendly**: Perfect for removing unused CSS from frameworks like Bootstrap
+- **Multiple Formats**: Supports glob patterns and file arrays
+- **Modern Build**: ES modules and CommonJS support
+- **CLI Tool**: Command-line interface for easy integration
+- **Whitelist/Safelist**: Keep specific selectors even if unused
 
 ### Potential reduction
 
@@ -22,20 +31,21 @@ If your application is using a CSS framework, this is especially useful as many 
 
 ### Standalone
 
-Installation  
+Installation
 
 ```bash
-npm i -D purify-css
+npm i -D purifycss
 ```
 
 ```javascript
-import purify from "purify-css"
-const purify = require("purify-css")
+import purify from "purifycss"
+// or
+const purify = require("purifycss")
 
-let content = ""
-let css = ""
+let content = ["src/**/*.html", "src/**/*.js"]
+let css = ["src/**/*.css"]
 let options = {
-    output: "filepath/output.css"
+    output: "dist/purified.css"
 }
 purify(content, css, options)
 ```
@@ -48,24 +58,28 @@ purify(content, css, options)
 
 ### CLI Usage
 
-```
-$ npm install -g purify-css
+```bash
+npm install -g purifycss
 ```
 
-```
-$ purifycss -h
+```bash
+purifycss --help
 
-purifycss <css> <content> [option]
+purifycss [options]
 
 Options:
+      --css        CSS files to purify                        [array] [required]
+  -c, --content    Content files or globs to search for used selectors
+                                                              [array] [required]
+  -o, --out        Filepath to write purified CSS to                    [string]
   -m, --min        Minify CSS                         [boolean] [default: false]
-  -o, --out        Filepath to write purified css to                    [string]
-  -i, --info       Logs info on how much css was removed
+  -i, --info       Logs info on how much CSS was removed
                                                       [boolean] [default: false]
   -r, --rejected   Logs the CSS rules that were removed
                                                       [boolean] [default: false]
-  -w, --whitelist  List of classes that should not be removed
+  -w, --whitelist  List of selectors that should not be removed
                                                            [array] [default: []]
+  -s, --safelist   Alias for --whitelist                   [array] [default: []]
   -h, --help       Show help                                           [boolean]
   -v, --version    Show version number                                 [boolean]
 ```
@@ -265,20 +279,30 @@ purify(content, css, function(purifiedCSS){
 
 ##### Example CLI Usage
 
+```bash
+purifycss --css src/css/*.css --content src/js/*.js src/index.html --min --info --out dist/purified.css
 ```
-$ purifycss src/css/main.css src/css/bootstrap.css src/js/main.js --min --info --out src/dist/index.css
-```
-This will concat both `main.css` and `bootstrap.css` and purify it by looking at what CSS selectors were used inside of `main.js`. It will then write the result to `dist/index.css`
 
-The `--min` flag minifies the result.
+This will purify all CSS files in `src/css/` by looking at selectors used in JavaScript files and `index.html`, then write the minified result to `dist/purified.css`.
 
-The `--info` flag will print this to stdout:
+The `--info` flag will print:
 ```
-    ________________________________________________
-    |
-    |   PurifyCSS has reduced the file size by ~ 33.8%
-    |
-    ________________________________________________
+________________________________________________
+|
+|   PurifyCSS has reduced the file size by ~ 33.8%
+|
+________________________________________________
+```
 
-```
-The CLI currently does not support file patterns.
+## What's New in v2.0
+
+This version includes significant improvements and modernizations:
+
+- **Updated Dependencies**: All dependencies updated to latest versions with security fixes
+- **Modern Build System**: Migrated to Rollup with ES modules support
+- **Improved CLI**: Better argument parsing, error handling, and glob pattern support
+- **Enhanced Word Detection**: Better handling of CSS identifiers with numbers, underscores, and hyphens
+- **Package Name**: Simplified to `purifycss` (was `purify-css`)
+- **Safelist Support**: Added `--safelist` as an alias for `--whitelist`
+
+### API in depth

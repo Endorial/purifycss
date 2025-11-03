@@ -8,9 +8,13 @@ export const getAllWordsInContent = content => {
         html: true,
         body: true
     }
-    const words = content.split(/[^a-z]/g)
+    // Split on characters that are not valid in CSS identifier parts
+    // CSS class names are composed of words separated by hyphens
+    const words = content.split(/[^a-zA-Z0-9_]/g)
     for (let word of words) {
-        used[word] = true
+        if (word) { // Skip empty strings
+            used[word.toLowerCase()] = true
+        }
     }
     return used
 }
@@ -36,8 +40,11 @@ export const getAllWordsInSelector = selector => {
             skipNextWord = true
             continue
         }
-        if (/[a-z]/.test(letter)) {
+        if (/[a-zA-Z0-9_]/.test(letter)) {
             word += letter
+        } else if (letter === '-') {
+            addWord(words, word)
+            word = ""
         } else {
             addWord(words, word)
             word = ""

@@ -1,24 +1,37 @@
 #!/usr/bin/env node
-var yargs = require("yargs")
-var path = require("path")
-var purify = require("../lib/purifycss.js")
+const yargs = require("yargs")
+const fs = require("fs")
+const path = require("path")
+const { hideBin } = require("yargs/helpers")
+const purify = require("../lib/purifycss.js")
 
-var argv = yargs
-    .usage("$0 <css> <content> [option]")
+const argv = yargs(hideBin(process.argv))
+    .usage("$0 [options]")
+    .option("css", {
+        description: "CSS files to purify",
+        type: "array",
+        demandOption: true
+    })
+    .option("c", {
+        alias: "content",
+        description: "Content files or globs to search for used selectors",
+        type: "array",
+        demandOption: true
+    })
+    .option("o", {
+        alias: "out",
+        description: "Filepath to write purified CSS to",
+        type: "string"
+    })
     .option("m", {
         alias: "min",
         description: "Minify CSS",
         type: "boolean",
         default: false
     })
-    .option("o", {
-        alias: "out",
-        description: "Filepath to write purified css to",
-        type: "string"
-    })
     .option("i", {
         alias: "info",
-        description: "Logs info on how much css was removed",
+        description: "Logs info on how much CSS was removed",
         type: "boolean",
         default: false
     })
@@ -30,35 +43,59 @@ var argv = yargs
     })
     .option("w", {
         alias: "whitelist",
-        description: "List of classes that should not be removed",
+        description: "List of selectors that should not be removed",
         type: "array",
         default: []
     })
-    .demandCommand(2)
+    .option("s", {
+        alias: "safelist",
+        description: "Alias for --whitelist",
+        type: "array",
+        default: []
+    })
     .help()
     .alias("h", "help")
     .version()
     .alias("v", "version")
     .argv
 
-var files = argv._
-var css = files.filter(function (file) {
-    return path.extname(file) === ".css"
-})
-var content = files.filter(function (file) {
-    return path.extname(file) !== ".css"
+// Combine whitelist and safelist
+const whitelist = [...(argv.whitelist || []), ...(argv.safelist || [])]
+
+const cssFiles = argv.css
+const contentFiles = argv.content
+
+// Validate that CSS files exist
+cssFiles.forEach(file => {
+    if (!fs.existsSync(file)) {
+        console.error(`Error: CSS file '${file}' does not exist`)
+        process.exit(1)
+    }
 })
 
-var options = {
+// Validate that content files exist (if not globs)
+contentFiles.forEach(pattern => {
+    // For now, just check if it's a direct file path
+    if (!pattern.includes('*') && !fs.existsSync(pattern)) {
+        console.error(`Error: Content file '${pattern}' does not exist`)
+        process.exit(1)
+    }
+})
+
+const options = {
     minify: argv.min,
     info: argv.info,
     rejected: argv.rejected,
     output: argv.out,
-    whitelist: argv.whitelist
+    whitelist: whitelist
 }
 
-if (options.output) {
-    purify(content, css, options)
-} else {
-    console.log(purify(content, css, options))
+try {
+    const result = purify(contentFiles, cssFiles, options)
+    if (!options.output) {
+        console.log(result)
+    }
+} catch (error) {
+    console.error(`Error: ${error.message}`)
+    process.exit(1)
 }
